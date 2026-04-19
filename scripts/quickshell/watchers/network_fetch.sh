@@ -6,6 +6,7 @@ get_wifi_ssid() {
     local ssid=""
     if command -v iw &>/dev/null; then
         ssid=$(iw dev 2>/dev/null | awk '/\s+ssid/ { $1=""; sub(/^ /, ""); print; exit }')
+        ssid=$(echo -e "$ssid")
     fi
     if [ -z "$ssid" ]; then
         ssid=$(nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | awk -F: '/802-11-wireless/ {print $1; exit}')
