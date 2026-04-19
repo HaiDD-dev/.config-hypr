@@ -1003,7 +1003,7 @@ Variants {
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
                             Text { 
-                                text: "󰌮"; font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(14); 
+                                text: "󰍛"; font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(14);
                                 color: mocha.overlay2; anchors.horizontalCenter: parent.horizontalCenter
                             }
                             Text { 
