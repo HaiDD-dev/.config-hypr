@@ -1392,7 +1392,7 @@ Variants {
                             id: rightUpdateMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: Quickshell.execDetached(["bash", "-c", "alacritty -e bash -c 'sudo pacman -Syu; read -p \"Press enter to close\"'"])
+                            onClicked: Quickshell.execDetached(["bash", "-c", "kitty --title 'System Update' bash -c 'sudo pacman -Syu; echo; read -p \"Press enter to close...\"'"])
                         }
                     }
 
