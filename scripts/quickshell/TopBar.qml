@@ -56,8 +56,10 @@ Variants {
             // --- State Variables ---
             property bool showHelpIcon: true
             property bool isRecording: false // Track screen recording
-            property int updateCount: 0 // Track pending updates
+            property int updateCount: 0 // Track pending UI updates
             property bool updateAvailable: updateCount > 0
+            property int pkgUpdateCount: 0 // Track pending pacman packages
+            property bool pkgUpdateAvailable: pkgUpdateCount > 0
             property int workspaceCount: 8
             
             // Tracks current qs widget to coordinate the sidebar transitions
@@ -146,7 +148,23 @@ Variants {
                     updatePoller.running = true;
                 }
             }
-            
+
+            // Pacman package update poller (every 5 min)
+            Process {
+                id: pkgPoller
+                command: ["bash", "-c", "checkupdates 2>/dev/null | wc -l || echo 0"]
+                stdout: StdioCollector {
+                    onStreamFinished: {
+                        let num = parseInt(this.text.trim());
+                        if (!isNaN(num)) barWindow.pkgUpdateCount = num;
+                    }
+                }
+            }
+            Timer {
+                interval: 300000; running: true; repeat: true; triggeredOnStart: true
+                onTriggered: { pkgPoller.running = false; pkgPoller.running = true; }
+            }
+
             Process {
                 id: settingsReader
                 command: ["bash", "-c", "cat ~/.config/hypr/settings.json 2>/dev/null || echo '{}'"]
@@ -1323,6 +1341,60 @@ Variants {
                     }
 
                     Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+
+                    // Update Button (Right)
+                    Rectangle {
+                        id: rightUpdateButton
+                        property bool isHovered: rightUpdateMouse.containsMouse
+                        color: isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.95) : Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
+                        radius: barWindow.s(14); border.width: 1; border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, isHovered ? 0.15 : 0.05)
+                        height: barWindow.barHeight
+                        property real targetWidth: barWindow.pkgUpdateAvailable ? pkgUpdateInnerRow.implicitWidth + barWindow.s(20) : 0
+                        width: targetWidth
+                        visible: targetWidth > 0 || opacity > 0
+                        opacity: barWindow.pkgUpdateAvailable ? 1.0 : 0.0
+                        clip: true
+
+                        Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+                        Behavior on opacity { NumberAnimation { duration: 300 } }
+                        scale: isHovered ? 1.05 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        property color pulseColor: mocha.yellow
+                        SequentialAnimation on pulseColor {
+                            running: barWindow.pkgUpdateAvailable
+                            loops: Animation.Infinite
+                            ColorAnimation { to: mocha.peach; duration: 1500; easing.type: Easing.InOutSine }
+                            ColorAnimation { to: mocha.yellow; duration: 1500; easing.type: Easing.InOutSine }
+                        }
+
+                        Row {
+                            id: pkgUpdateInnerRow
+                            anchors.centerIn: parent
+                            spacing: barWindow.s(6)
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "󰏗"
+                                font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(18)
+                                color: rightUpdateButton.isHovered ? mocha.text : rightUpdateButton.pulseColor
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: barWindow.pkgUpdateCount
+                                font.family: "JetBrains Mono"; font.pixelSize: barWindow.s(13); font.weight: Font.Bold
+                                color: rightUpdateButton.isHovered ? mocha.text : mocha.subtext1
+                                Behavior on color { ColorAnimation { duration: 200 } }
+                            }
+                        }
+                        MouseArea {
+                            id: rightUpdateMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: Quickshell.execDetached(["bash", "-c", "alacritty -e bash -c 'sudo pacman -Syu; read -p \"Press enter to close\"'"])
+                        }
+                    }
 
                     // Dedicated System Tray Pill
                     Rectangle {
