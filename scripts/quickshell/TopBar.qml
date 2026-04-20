@@ -963,7 +963,7 @@ Variants {
                     property real targetWidth: barWindow.s(100)
 
                     property real defaultX: updateButton.targetX + updateButton.targetWidth + barWindow.s(8)
-                    property real settingsX: mediaBox.settingsX - targetWidth - (targetWidth > 0 ? barWindow.s(8) : 0)
+                    property real settingsX: cleanupButton.settingsX - targetWidth - barWindow.s(8)
                     
                     property real targetX: barWindow.isSettingsOpen ? settingsX : defaultX
                     x: targetX
@@ -1021,6 +1021,81 @@ Variants {
                             Text { 
                                 text: barWindow.diskPercent; font.family: "JetBrains Mono"; font.pixelSize: barWindow.s(10); font.weight: Font.Bold; 
                                 color: mocha.text; anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                        }
+                    }
+                }
+
+                // ---------------- CLEANUP BUTTON ----------------
+                Rectangle {
+                    id: cleanupButton
+                    property bool isHovered: cleanupMouse.containsMouse
+                    property bool justCleaned: false
+                    property bool isCleaning: false
+                    color: justCleaned ? Qt.rgba(mocha.green.r, mocha.green.g, mocha.green.b, 0.9) : isHovered ? Qt.rgba(mocha.surface1.r, mocha.surface1.g, mocha.surface1.b, 0.95) : Qt.rgba(mocha.base.r, mocha.base.g, mocha.base.b, 0.75)
+                    radius: barWindow.s(14); border.width: 1; border.color: Qt.rgba(mocha.text.r, mocha.text.g, mocha.text.b, isHovered ? 0.15 : 0.05)
+                    height: barWindow.barHeight
+                    y: (parent.height - barWindow.barHeight) / 2
+
+                    property real targetWidth: barWindow.barHeight
+                    width: targetWidth
+
+                    property real defaultX: tempBox.targetX + tempBox.targetWidth + barWindow.s(8)
+                    property real settingsX: mediaBox.settingsX - targetWidth - barWindow.s(8)
+                    property real targetX: barWindow.isSettingsOpen ? settingsX : defaultX
+                    x: targetX
+                    Behavior on x {
+                        enabled: barWindow.startupCascadeFinished
+                        NumberAnimation { duration: 600; easing.type: Easing.OutExpo }
+                    }
+
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                    scale: isHovered ? 1.05 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+
+                    Process {
+                        id: cleanupProcess
+                        command: ["bash", "/home/haidd-dev/.config/hypr/scripts/cleanup.sh"]
+                        stdout: StdioCollector { onStreamFinished: {} }
+                        onExited: {
+                            cleanupButton.isCleaning = false
+                            cleanupButton.justCleaned = true
+                            cleanFeedbackTimer.restart()
+                        }
+                    }
+
+                    Timer {
+                        id: cleanFeedbackTimer
+                        interval: 1000
+                        onTriggered: cleanupButton.justCleaned = false
+                    }
+
+                    Text {
+                        id: cleanupIcon
+                        anchors.centerIn: parent
+                        text: "󰆴"
+                        font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(16)
+                        color: cleanupButton.justCleaned ? mocha.base : (cleanupButton.isHovered ? mocha.red : mocha.overlay2)
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        transformOrigin: Item.Center
+                        RotationAnimation on rotation {
+                            running: cleanupButton.isCleaning
+                            loops: Animation.Infinite
+                            from: 0; to: 360
+                            duration: 800
+                        }
+                    }
+
+                    MouseArea {
+                        id: cleanupMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: cleanupButton.isCleaning ? Qt.WaitCursor : Qt.PointingHandCursor
+                        onClicked: {
+                            if (!cleanupButton.isCleaning) {
+                                cleanupButton.isCleaning = true
+                                cleanupButton.justCleaned = false
+                                cleanupProcess.running = true
                             }
                         }
                     }
