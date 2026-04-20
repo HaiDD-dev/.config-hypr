@@ -1073,7 +1073,7 @@ Variants {
                     Text {
                         id: cleanupIcon
                         anchors.centerIn: parent
-                        text: "󰆴"
+                        text: cleanupButton.isCleaning ? "󰑐" : "󰆴"
                         font.family: "Iosevka Nerd Font"; font.pixelSize: barWindow.s(16)
                         color: cleanupButton.justCleaned ? mocha.base : (cleanupButton.isHovered ? mocha.red : mocha.overlay2)
                         Behavior on color { ColorAnimation { duration: 200 } }
@@ -1083,6 +1083,7 @@ Variants {
                             loops: Animation.Infinite
                             from: 0; to: 360
                             duration: 800
+                            onStopped: cleanupIcon.rotation = 0
                         }
                     }
 
