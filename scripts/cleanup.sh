@@ -40,6 +40,13 @@ if command -v cargo &>/dev/null; then
     cargo_cleaned="yes"
 fi
 
+# AUR build cache (yay)
+if [ -d "$HOME/.cache/yay" ]; then
+    aur_size=$(du -sh "$HOME/.cache/yay" 2>/dev/null | cut -f1)
+    rm -rf "$HOME/.cache/yay/"*/
+    aur_cleaned="yes"
+fi
+
 # --- Root-level ---
 free_before=$(free -h | awk '/^Mem:/{print $4}')
 priv_out=$(sudo /home/haidd-dev/.config/hypr/scripts/cleanup-privileged.sh 2>/dev/null)
@@ -59,6 +66,7 @@ body+="\nShader cache cleared"
 [ -n "$npm_cleaned" ]   && body+="\nnpm cache cleaned"
 [ -n "$pip_cleaned" ]   && body+="\npip cache cleaned"
 [ -n "$cargo_cleaned" ] && body+="\ncargo cache cleaned"
+[ -n "$aur_cleaned" ]   && body+="\nAUR cache cleared: ${aur_size}"
 body+="\nPacman cache: ${pkg_cache} remaining"
 [ "$orphans" != "0" ]   && body+="\nOrphans removed: ${orphans}" || body+="\nOrphans: none"
 body+="\nJournal: ${journal} remaining"

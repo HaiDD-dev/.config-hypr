@@ -5,8 +5,8 @@
 sync
 echo 3 > /proc/sys/vm/drop_caches
 
-# Pacman package cache (keep installed versions)
-pacman -Sc --noconfirm 2>/dev/null
+# Pacman package cache (full clear)
+pacman -Scc --noconfirm 2>/dev/null
 pkg_size=$(du -sh /var/cache/pacman/pkg 2>/dev/null | cut -f1)
 echo "PKG_CACHE:${pkg_size}"
 
