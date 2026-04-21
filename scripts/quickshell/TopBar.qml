@@ -600,12 +600,10 @@ Variants {
                                 barWindow.diskPercent = parts[1] + "%";
                             }
                         }
-                        sysWaiter.running = false;
-                        sysWaiter.running = true;
                     }
                 }
             }
-            Process { id: sysWaiter; command: ["bash", "-c", "~/.config/hypr/scripts/quickshell/watchers/temp_wait.sh"]; onExited: { sysPoller.running = false; sysPoller.running = true; } }
+            Timer { interval: 500; running: true; repeat: true; triggeredOnStart: true; onTriggered: { sysPoller.running = false; sysPoller.running = true; } }
 
             // --- NET SPEED ---
             Process {
@@ -630,7 +628,7 @@ Variants {
                 }
             }
             Timer {
-                interval: 1000; running: true; repeat: true; triggeredOnStart: true
+                interval: 500; running: true; repeat: true; triggeredOnStart: true
                 onTriggered: { netSpeedPoller.running = false; netSpeedPoller.running = true; }
             }
 
