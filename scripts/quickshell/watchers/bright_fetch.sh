@@ -15,7 +15,12 @@ get_brightness() {
 }
 
 get_brightness_icon() {
-    echo "󰛩"
+    local pct="${1:-100}"
+    local icons=("" "" "" "" "" "" "" "" "" "" "" "" "" "" "")
+    local idx=$(( pct * 15 / 100 ))
+    [ "$idx" -ge 15 ] && idx=14
+    [ "$idx" -lt 0 ] && idx=0
+    echo "${icons[$idx]}"
 }
 
 case $1 in
@@ -30,10 +35,16 @@ case $1 in
             brightnessctl set 1%+ 2>/dev/null
         fi
         ;;
-    --down) 
+    --down)
         if command -v brightnessctl &> /dev/null; then
-            brightnessctl set 1%- 2>/dev/null
+            cur=$(get_brightness)
+            if [ "$cur" -gt 1 ]; then
+                brightnessctl set 1%- 2>/dev/null
+            fi
         fi
         ;;
-    *) jq -n -c --arg brightness "$(get_brightness)" --arg icon "$(get_brightness_icon)" '{brightness: $brightness, icon: $icon}' ;;
+    *)
+        b=$(get_brightness)
+        jq -n -c --arg brightness "$b" --arg icon "$(get_brightness_icon "$b")" '{brightness: $brightness, icon: $icon}'
+        ;;
 esac
