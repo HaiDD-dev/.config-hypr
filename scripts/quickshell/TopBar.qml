@@ -227,14 +227,14 @@ Variants {
             
             // Prevents repeaters (Workspaces/Tray) from flickering on data updates
             property bool startupCascadeFinished: false
-            Timer { interval: 1000; running: true; onTriggered: barWindow.startupCascadeFinished = true }
-            
+            Timer { interval: 300; running: true; onTriggered: barWindow.startupCascadeFinished = true }
+
             // Data gating to prevent startup layout jumping
             property bool fastPollerLoaded: false
-            
+
             property bool isDataReady: fastPollerLoaded
-            // Failsafe: Force the layout to show after 600ms even if fast poller hangs
-            Timer { interval: 600; running: true; onTriggered: barWindow.isDataReady = true }
+            // Failsafe: show bar even if audio process hasn't exited yet
+            Timer { interval: 200; running: true; onTriggered: barWindow.isDataReady = true }
             
             property string timeStr: ""
             property string fullDateStr: ""
@@ -289,7 +289,7 @@ Variants {
             property bool isMediaActive: barWindow.musicData.status !== "Stopped" && barWindow.musicData.title !== ""
             property bool isWifiOn: barWindow.wifiStatus.toLowerCase() === "enabled" || barWindow.wifiStatus.toLowerCase() === "on"
             property bool isBtOn: barWindow.btStatus.toLowerCase() === "enabled" || barWindow.btStatus.toLowerCase() === "on"
-            property bool showEthernet: barWindow.isDesktop && !barWindow.isWifiOn
+            property bool showEthernet: barWindow.ethStatus === "Connected"
             
             property bool isSoundActive: !barWindow.isMuted && parseInt(barWindow.volPercent) > 0
             property int batCap: parseInt(barWindow.batPercent) || 0
@@ -469,9 +469,9 @@ Variants {
                                 if (barWindow.volIcon !== data.icon) barWindow.volIcon = data.icon;
                                 let newMuted = (data.is_muted === "true");
                                 if (barWindow.isMuted !== newMuted) barWindow.isMuted = newMuted;
-                                barWindow.fastPollerLoaded = true; // Gating flag
                             } catch(e) {}
                         }
+                        barWindow.fastPollerLoaded = true; // Gating flag — unconditional so a stalled wpctl at boot doesn't block the bar
                         audioWaiter.running = false;
                         audioWaiter.running = true;
                     }
@@ -1410,7 +1410,7 @@ Variants {
                     
                     Timer {
                         running: barWindow.isStartupReady && barWindow.isDataReady
-                        interval: 250
+                        interval: 0
                         onTriggered: rightContent.showLayout = true
                     }
 
